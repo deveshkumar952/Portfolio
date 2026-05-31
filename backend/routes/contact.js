@@ -1,4 +1,5 @@
 // backend/routes/contact.js
+import 'dotenv/config';
 import express from 'express';
 import axios from 'axios';
 import nodemailer from 'nodemailer';
@@ -83,8 +84,9 @@ router.post('/contact', async (req, res) => {
     });
 
     // Background Task B: Dispatch SMTP Mailer
+    // Background Task B: Dispatch SMTP Mailer
     transporter.sendMail({
-      from: "Portfolio", 
+      from: `"Portfolio" <${process.env.EMAIL_ADDRESS}>`, // Fixed: Proper format
       to: process.env.EMAIL_ADDRESS, 
       subject: `New Message From ${name}`, 
       text: messageContent, 
