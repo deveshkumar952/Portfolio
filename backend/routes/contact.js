@@ -5,7 +5,20 @@ import nodemailer from 'nodemailer';
 
 const router = express.Router();
 
-// HTML Email Template Gen
+// 1. Initialize the Nodemailer Transporter ONCE at startup
+// This reuses the SMTP connection pool instead of recreating it on every click.
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false, 
+  auth: {
+    user: process.env.EMAIL_ADDRESS,
+    pass: process.env.GMAIL_PASSKEY, 
+  },
+});
+
+// HTML Email Template Generator
 const generateEmailTemplate = (name, email, userMessage) => `
   <div style="font-family: Arial, sans-serif; color: #333; padding: 20px; background-color: #f4f4f4;">
     <div style="max-width: 600px; margin: auto; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);">
@@ -20,7 +33,20 @@ const generateEmailTemplate = (name, email, userMessage) => `
 `;
 
 // =========================================================================
-// ROUTE: POST /api/contact
+// ROUTE 1: GET /api/data (Status check / test route)
+// =========================================================================
+router.get('/data', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'hle!',
+    data: {
+      message: 'Message and email sent successfully!',
+    }
+  });
+});
+
+// =========================================================================
+// ROUTE 2: POST /api/contact (Optimized Asynchronous Messaging Engine)
 // =========================================================================
 router.post('/contact', async (req, res) => {
   try {
@@ -28,76 +54,57 @@ router.post('/contact', async (req, res) => {
     const token = process.env.TELEGRAM_BOT_TOKEN;
     const chat_id = process.env.TELEGRAM_CHAT_ID;
 
+    // Validate configuration variables immediately
     if (!token || !chat_id) {
       return res.status(400).json({
         success: false,
-        message: 'Telegram token or chat ID is missing.',
+        message: 'Telegram token or chat ID is missing from system variables.',
       });
     }
-
-    // 1. Create the transporter dynamically inside the request handler
-    // This guarantees your loaded variables are used!
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false, 
-      auth: {
-        user: process.env.EMAIL_ADDRESS,
-        pass: process.env.GMAIL_PASSKEY, 
-      },
-    });
 
     const messageContent = `New message from ${name}\n\nEmail: ${email}\n\nMessage:\n\n${userMessage}\n\n`;
 
-    // Send Telegram Notification
-    let telegramSuccess = false;
-    try {
-      const telegramRes = await axios.post(`https://api.telegram.org/bot${token}/sendMessage`, {
-        text: messageContent,
-        chat_id,
-      });
-      telegramSuccess = telegramRes.data.ok;
-    } catch (err) {
-      console.error('Telegram dispatch failed:', err.message);
-    }
+    // 2. RESPOND IMMEDIATELY TO THE FRONTEND
+    // This stops the UI spinner instantly so the user doesn't wait on slow email handshakes.
+    res.status(200).json({
+      success: true,
+      message: 'Message processing started successfully!',
+    });
 
-    // Send Email Notification
-    let emailSuccess = false;
-    try {
-      await transporter.sendMail({
-        from: "Portfolio", 
-        to: process.env.EMAIL_ADDRESS, 
-        subject: `New Message From ${name}`, 
-        text: messageContent, 
-        html: generateEmailTemplate(name, email, userMessage), 
-        replyTo: email, 
-      });
-      emailSuccess = true;
-    } catch (err) {
-      console.error('Email dispatch failed:', err.message);
-    }
+    // 3. BACKGROUND WORKERS (Executed asynchronously without 'await')
+    // Node's event loop processes these tasks silently after releasing the client.
+    
+    // Background Task A: Dispatch Telegram Alert
+    axios.post(`https://api.telegram.org/bot${token}/sendMessage`, {
+      text: messageContent,
+      chat_id,
+    }).catch((err) => {
+      console.error('Production background Telegram notification failed:', err.message);
+    });
 
-    if (telegramSuccess && emailSuccess) {
-      return res.status(200).json({
-        success: true,
-        message: 'Message and email sent successfully!',
-      });
-    }
-
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to send message or email.',
+    // Background Task B: Dispatch SMTP Mailer
+    transporter.sendMail({
+      from: "Portfolio", 
+      to: process.env.EMAIL_ADDRESS, 
+      subject: `New Message From ${name}`, 
+      text: messageContent, 
+      html: generateEmailTemplate(name, email, userMessage), 
+      replyTo: email, 
+    }).catch((err) => {
+      console.error('Production background Email delivery failed:', err.message);
     });
 
   } catch (error) {
     console.error('Systems Error:', error.message);
-    return res.status(500).json({ success: false, message: 'Server error occurred.' });
+    // Safe-check: Only reply with error if response headers haven't already been emitted
+    if (!res.headersSent) {
+      return res.status(500).json({ success: false, message: 'Server error occurred.' });
+    }
   }
 });
 
 // =========================================================================
-// ROUTE: POST /api/google-recaptcha
+// ROUTE 3: POST /api/google-recaptcha (Remains awaited for structural score verification)
 // =========================================================================
 router.post('/google-recaptcha', async (req, res) => {
   const secret_key = process.env.RECAPTCHA_SECRET_KEY;
