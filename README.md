@@ -1,6 +1,6 @@
 # Modern Developer Portfolio (MERN Stack)
 
-A high-performance, responsive developer portfolio built using **Vite + React** on the frontend and **Node.js + Express** on the backend. This project showcases technical skills, professional experiences, and features a functional real-time communication contact system.
+A high-performance, responsive developer portfolio built using **Vite + React** on the frontend and **Node.js + Express** on the backend. This project showcases technical skills, professional experiences, and features a functional concurrent communication contact system.
 
 ---
 
@@ -8,34 +8,36 @@ A high-performance, responsive developer portfolio built using **Vite + React** 
 
 ### Modern Frontend Pipeline
 
-* Migrated to **Vite + React** featuring advanced build optimizations.
-* Fast development experience with lightning-fast HMR.
+- Migrated to **Vite + React** featuring advanced build optimizations.
+- Fast development experience with lightning-fast HMR.
 
 ### Dynamic Backgrounds & Smooth Scrolling
 
-* Custom SVG background layers.
-* Native smooth layout transitions for a polished user experience.
+- Custom SVG background layers.
+- Native smooth layout transitions for a polished user experience.
 
 ### Interactive UI Cards
 
-* Specialized gradient-masking hover glow effects.
-* Responsive and engaging card interactions.
+- Specialized gradient-masking hover glow effects.
+- Responsive and engaging card interactions.
 
 ### Unified Multi-Channel Contact Hub
 
-A secure contact form connected to a live **Node.js/Express API** that dispatches messages across multiple platforms simultaneously:
+A secure contact form connected to a live **Node.js/Express API** that dispatches messages across multiple platforms concurrently, optimized to prevent platform timeouts in serverless or cloud hosting environments.
 
-#### 📧 Nodemailer (Gmail SMTP)
+#### 📧 Resend Email Integration
 
-* Sends clean HTML-formatted emails instantly.
+- Powered by the official **Resend Node.js SDK**.
+- Sends clean, responsive HTML-formatted emails instantly to your inbox.
+- Features configured `reply_to` headers to let you reply straight to your site visitors with a single click.
 
 #### 🤖 Telegram Bot Integration
 
-* Push notifications delivered directly to your Telegram account.
+- Real-time push notifications delivered directly to your personal Telegram chat or channel via the Telegram Bot API.
 
 #### 🛡️ Google reCAPTCHA v2 Security
 
-* Protects contact endpoints from spam and malicious requests.
+- Protects contact endpoints from automated spam and malicious requests.
 
 ---
 
@@ -43,15 +45,15 @@ A secure contact form connected to a live **Node.js/Express API** that dispatche
 
 ### Frontend
 
-* **Framework:** React 19 (Vite)
-* **Styling:** Tailwind CSS, Sass/SCSS
-* **Icons:** React Icons
+- **Framework:** React 19 (Vite)
+- **Styling:** Tailwind CSS, Sass/SCSS
+- **Icons:** React Icons
 
 ### Backend
 
-* **Runtime:** Node.js (ES Modules)
-* **Framework:** Express.js
-* **Utilities:** Axios, Nodemailer, CORS, Dotenv
+- **Runtime:** Node.js (ES Modules)
+- **Framework:** Express.js
+- **Utilities:** Resend SDK, Axios, CORS, Dotenv
 
 ---
 
@@ -59,136 +61,345 @@ A secure contact form connected to a live **Node.js/Express API** that dispatche
 
 ```plaintext
 portfolio/
-├── frontend/                    # Vite + React Client
+├── frontend/
 │   ├── src/
 │   │   ├── components/
 │   │   ├── css/
 │   │   │   ├── Globals.scss
 │   │   │   └── Card.scss
-│   │   └── App.jsx              # Root Wrapper
-│   └── .env                     # Client Environment Variables
+│   │   └── App.jsx
+│   └── .env
 │
-└── backend/                     # Express Server
+└── backend/
     ├── routes/
-    │   └── contact.js           # Unified Notification Engine
-    ├── server.js                # Main Server Entry
-    └── .env                     # Backend Environment Variables
+    │   └── contact.js
+    ├── server.js
+    └── .env
+## ⚙️ Setup & Installation
+
+### Prerequisites
+
+Before starting, make sure you have installed:
+
+- Node.js (v18 or higher recommended)
+- npm or yarn
+- Git
+
+Verify installation:
+
+```bash
+node -v
+npm -v
+git --version
 ```
 
 ---
 
-## ⚙️ Setup & Installation
-
-### 1. Clone the Repository
+## 1️⃣ Clone the Repository
 
 ```bash
 git clone https://github.com/your-username/portfolio.git
 cd portfolio
 ```
 
-> Make sure Node.js is installed on your system.
-
 ---
 
-### 2. Configure the Backend Server
+## 2️⃣ Backend Setup
 
-Navigate to the backend directory and install dependencies:
+Navigate to the backend folder:
 
 ```bash
 cd backend
+```
+
+Install dependencies:
+
+```bash
 npm install
 ```
 
-Create a `.env` file inside the `backend/` directory:
+### Required Packages
+
+```bash
+npm install express cors dotenv axios resend
+```
+
+Create a `.env` file inside the backend directory:
 
 ```env
 PORT=5000
-EMAIL_ADDRESS=your-email@gmail.com
-GMAIL_PASSKEY=your-16-character-app-password
+
+# Resend
+RESEND_API_KEY=your_resend_api_key
+EMAIL_ADDRESS=your_email@example.com
+
+# Telegram
 TELEGRAM_BOT_TOKEN=your_telegram_bot_token
-TELEGRAM_CHAT_ID=your_telegram_chat_id
-RECAPTCHA_SECRET_KEY=your_google_recaptcha_secret_key
+TELEGRAM_CHAT_ID=your_chat_id
+
+# Google reCAPTCHA
+RECAPTCHA_SECRET_KEY=your_recaptcha_secret_key
+```
+
+Backend structure:
+
+```plaintext
+backend/
+├── routes/
+│   └── contact.js
+├── server.js
+├── package.json
+└── .env
 ```
 
 ---
 
-### 3. Configure the Frontend Client
+## 3️⃣ Frontend Setup
 
-Open a new terminal:
+Open a new terminal and navigate to frontend:
 
 ```bash
 cd frontend
+```
+
+Install dependencies:
+
+```bash
 npm install
 ```
 
-Create a `.env` file inside the `frontend/` directory:
+### Required Packages
+
+```bash
+npm install react-icons
+npm install react-google-recaptcha
+npm install axios
+```
+
+Create a `.env` file:
 
 ```env
 VITE_APP_URL=http://localhost:5000
-VITE_RECAPTCHA_SITE_KEY=your_google_recaptcha_site_key
+VITE_RECAPTCHA_SITE_KEY=your_site_key
+```
+
+Frontend structure:
+
+```plaintext
+frontend/
+├── src/
+│   ├── assets/
+│   ├── components/
+│   ├── css/
+│   ├── App.jsx
+│   └── main.jsx
+├── public/
+├── package.json
+└── .env
 ```
 
 ---
 
-## 🏃 Running the Application
+## 4️⃣ Running the Backend
 
-Launch both frontend and backend servers in separate terminal windows.
-
-### Start the Backend API
+From the backend directory:
 
 ```bash
-cd backend
-node server.js
+npm start
 ```
 
-Expected output:
+Or if using nodemon:
 
 ```bash
-Server running smoothly on port 5000
-```
-
----
-
-### Start the Frontend Development Server
-
-```bash
-cd frontend
 npm run dev
 ```
 
-Expected output:
+Expected Output:
 
 ```bash
-Local: http://localhost:5173/
+Server running on port 5000
+```
+
+Backend URL:
+
+```text
+http://localhost:5000
 ```
 
 ---
 
-## 🌐 Access the Application
+## 5️⃣ Running the Frontend
 
-Open the following URL in your browser:
+From the frontend directory:
+
+```bash
+npm run dev
+```
+
+Expected Output:
+
+```bash
+VITE v7.x ready in xxx ms
+
+➜ Local: http://localhost:5173/
+```
+
+Frontend URL:
 
 ```text
 http://localhost:5173
 ```
 
-Your fully functional MERN portfolio should now be running locally.
+---
+
+## 6️⃣ Testing Contact Form
+
+Fill in:
+
+- Name
+- Email
+- Message
+- Complete reCAPTCHA
+
+On successful submission:
+
+### Email
+
+- Message is sent via Resend
+- Delivered to configured inbox
+
+### Telegram
+
+- Instant notification appears in Telegram
+
+### API Response
+
+```json
+{
+  "success": true,
+  "message": "Message sent successfully"
+}
+```
 
 ---
 
-## 📌 Highlights
+## 7️⃣ Production Deployment
 
-* Responsive design for all screen sizes
-* Modern Vite-powered React frontend
-* Secure Express.js backend
-* Email notifications via Gmail SMTP
-* Telegram instant message alerts
-* Google reCAPTCHA spam protection
-* Optimized project architecture
-* Easy deployment and customization
+### Frontend (Vercel)
+
+```bash
+npm run build
+```
+
+Deploy:
+
+```bash
+vercel --prod
+```
+
+### Backend (Render)
+
+1. Create a Web Service
+2. Connect GitHub repository
+3. Add Environment Variables
+4. Deploy
+
+Build Command:
+
+```bash
+npm install
+```
+
+Start Command:
+
+```bash
+npm start
+```
 
 ---
 
-## 📄 License
+## 8️⃣ Environment Variables Summary
 
-This project is open-source and available under the MIT License.
+### Backend
+
+```env
+PORT=
+RESEND_API_KEY=
+EMAIL_ADDRESS=
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=
+RECAPTCHA_SECRET_KEY=
+```
+
+### Frontend
+
+```env
+VITE_APP_URL=
+VITE_RECAPTCHA_SITE_KEY=
+```
+
+---
+
+## 9️⃣ Troubleshooting
+
+### Resend Emails Not Sending
+
+Check:
+
+```env
+RESEND_API_KEY
+EMAIL_ADDRESS
+```
+
+Verify sender domain in Resend dashboard.
+
+### Telegram Notifications Not Working
+
+Verify:
+
+```env
+TELEGRAM_BOT_TOKEN
+TELEGRAM_CHAT_ID
+```
+
+Test:
+
+```bash
+https://api.telegram.org/bot<token>/getMe
+```
+
+### reCAPTCHA Failure
+
+Confirm:
+
+```env
+RECAPTCHA_SECRET_KEY
+VITE_RECAPTCHA_SITE_KEY
+```
+
+Ensure both keys belong to the same Google reCAPTCHA project.
+
+---
+
+## 🔒 Security Features
+
+- Environment variable protection
+- Google reCAPTCHA validation
+- CORS configuration
+- Secure API routing
+- Email spoofing protection with Reply-To headers
+
+---
+
+## 📈 Future Improvements
+
+- Dark/Light Theme Toggle
+- Blog Integration
+- Project CMS
+- Analytics Dashboard
+- Resume Download Tracking
+- GitHub Activity Feed
+- Multi-language Support
+
+---
+
