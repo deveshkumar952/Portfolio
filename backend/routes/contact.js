@@ -55,38 +55,43 @@ router.post('/contact', async (req, res) => {
 
     const messageContent = `New message from ${name}\n\nEmail: ${email}\n\nMessage:\n\n${userMessage}\n\n`;
 
-    // 1. RESPOND IMMEDIATELY TO THE FRONTEND
-    // This stops the UI spinner instantly so the user doesn't wait on slow handshakes.
-    res.status(200).json({
+    // Create the execution array for both third-party platforms
+    const notifications = [];
+
+    // 1. Queue Telegram Dispatch
+    notifications.push(
+      axios.post(`https://api.telegram.org/bot${token}/sendMessage`, {
+        text: messageContent,
+        chat_id,
+      }).catch(err => {
+        console.error('Production Telegram notification failed:', err.message);
+      })
+    );
+
+    // 2. Queue Resend SDK Dispatch
+    notifications.push(
+      resend.emails.send({
+        from: 'onboarding@resend.dev',
+        to: 'deveshkumar952@gmail.com', // Explicitly set to ensure delivery
+        subject: `New Message From ${name}`,
+        html: generateEmailTemplate(name, email, userMessage),
+        reply_to: email,
+      }).catch(err => {
+        console.error('Production Email delivery failed:', err);
+      })
+    );
+
+    // 3. WAIT for both APIs to respond before letting Render spin down the CPU
+    await Promise.all(notifications);
+
+    // 4. NOW RESPOND TO THE FRONTEND
+    return res.status(200).json({
       success: true,
-      message: 'Message processing started successfully!',
-    });
-
-    // 2. BACKGROUND WORKERS (Executed asynchronously without 'await')
-    // Node's event loop processes these tasks silently after releasing the client.
-    
-    // Background Task A: Dispatch Telegram Alert
-    axios.post(`https://api.telegram.org/bot${token}/sendMessage`, {
-      text: messageContent,
-      chat_id,
-    }).catch((err) => {
-      console.error('Production background Telegram notification failed:', err.message);
-    });
-
-    // Background Task B: Dispatch API Email Mailer via Resend SDK
-    resend.emails.send({
-      from: 'onboarding@resend.dev',                  // Resend free tier default verified sender
-      to: process.env.EMAIL_ADDRESS,                    // Received at your personal email address
-      subject: `New Message From ${name}`,
-      html: generateEmailTemplate(name, email, userMessage),
-      reply_to: email,                                  // Allows direct reply to user from your email client
-    }).catch((err) => {
-      console.error('Production background Email delivery failed:', err);
+      message: 'Message processed and sent successfully!',
     });
 
   } catch (error) {
     console.error('Systems Error:', error.message);
-    // Safe-check: Only reply with error if response headers haven't already been emitted
     if (!res.headersSent) {
       return res.status(500).json({ success: false, message: 'Server error occurred.' });
     }
