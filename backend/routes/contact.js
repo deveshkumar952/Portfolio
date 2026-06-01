@@ -2,22 +2,12 @@
 import 'dotenv/config';
 import express from 'express';
 import axios from 'axios';
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 const router = express.Router();
 
-// 1. Initialize the Nodemailer Transporter ONCE at startup
-// This reuses the SMTP connection pool instead of recreating it on every click.
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false, 
-  auth: {
-    user: process.env.EMAIL_ADDRESS,
-    pass: process.env.GMAIL_PASSKEY, 
-  },
-});
+// Initialize the Resend SDK with your environment variable
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // HTML Email Template Generator
 const generateEmailTemplate = (name, email, userMessage) => `
@@ -41,7 +31,7 @@ router.get('/data', (req, res) => {
     success: true,
     message: 'hle!',
     data: {
-      message: 'Message and email sent successfully!',
+      message: 'Server is reaching routes successfully!',
     }
   });
 });
@@ -65,14 +55,14 @@ router.post('/contact', async (req, res) => {
 
     const messageContent = `New message from ${name}\n\nEmail: ${email}\n\nMessage:\n\n${userMessage}\n\n`;
 
-    // 2. RESPOND IMMEDIATELY TO THE FRONTEND
-    // This stops the UI spinner instantly so the user doesn't wait on slow email handshakes.
+    // 1. RESPOND IMMEDIATELY TO THE FRONTEND
+    // This stops the UI spinner instantly so the user doesn't wait on slow handshakes.
     res.status(200).json({
       success: true,
       message: 'Message processing started successfully!',
     });
 
-    // 3. BACKGROUND WORKERS (Executed asynchronously without 'await')
+    // 2. BACKGROUND WORKERS (Executed asynchronously without 'await')
     // Node's event loop processes these tasks silently after releasing the client.
     
     // Background Task A: Dispatch Telegram Alert
@@ -83,17 +73,15 @@ router.post('/contact', async (req, res) => {
       console.error('Production background Telegram notification failed:', err.message);
     });
 
-    // Background Task B: Dispatch SMTP Mailer
-    // Background Task B: Dispatch SMTP Mailer
-    transporter.sendMail({
-      from: `"Portfolio" <${process.env.EMAIL_ADDRESS}>`, // Fixed: Proper format
-      to: process.env.EMAIL_ADDRESS, 
-      subject: `New Message From ${name}`, 
-      text: messageContent, 
-      html: generateEmailTemplate(name, email, userMessage), 
-      replyTo: email, 
+    // Background Task B: Dispatch API Email Mailer via Resend SDK
+    resend.emails.send({
+      from: 'onboarding@resend.dev',                  // Resend free tier default verified sender
+      to: process.env.EMAIL_ADDRESS,                    // Received at your personal email address
+      subject: `New Message From ${name}`,
+      html: generateEmailTemplate(name, email, userMessage),
+      reply_to: email,                                  // Allows direct reply to user from your email client
     }).catch((err) => {
-      console.error('Production background Email delivery failed:', err.message);
+      console.error('Production background Email delivery failed:', err);
     });
 
   } catch (error) {
