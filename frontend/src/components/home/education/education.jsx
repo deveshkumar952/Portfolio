@@ -6,7 +6,7 @@ import GlowCard from "../../helper/glow-card";
 function education() {
   return (
     <div
-      id="experience"
+      id="education"
       className="relative z-50 border-t my-12 lg:my-24 border-[#25213b]"
     >
       {/* Background SVG - Standard img tag for Vite */}
@@ -20,7 +20,7 @@ function education() {
         <div className="flex items-center">
           <span className="w-24 h-[2px] bg-[#1a1443]"></span>
           <span className="bg-[#1a1443] w-fit text-white p-2 px-5 text-xl rounded-md">
-            Experiences
+            Education 
           </span>
           <span className="w-24 h-[2px] bg-[#1a1443]"></span>
         </div>
